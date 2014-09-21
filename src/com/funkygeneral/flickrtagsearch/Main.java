@@ -67,12 +67,16 @@ public class Main extends ActionBarActivity {
 	String tagWord;
 
 	private ProgressDialog pDialog;
+	
+	DatabaseHandler dbHandler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		dbHandler = new DatabaseHandler(this);
+		
 		text_input = (EditText) findViewById(R.id.text_input);
 		searchButton = (Button) findViewById(R.id.search_button);
 		searchButton.setOnClickListener(new OnClickListener() {
@@ -81,6 +85,7 @@ public class Main extends ActionBarActivity {
 			public void onClick(View v) {
 				tagWord = text_input.getText().toString();
 				Log.d(TAG, tagWord);
+				dbHandler.addHistoryItem(new HistoryItem(tagWord));
 				new LookForTag().execute();
 			}
 
