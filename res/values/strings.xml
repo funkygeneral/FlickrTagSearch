@@ -4,5 +4,7 @@
     <string name="app_name">Flickr Tag Search</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_history">Search History</string>
+    <string name="edit_text_hint">Type in a tag</string>
+    <string name="button_label">Search</string>
 
 </resources>
