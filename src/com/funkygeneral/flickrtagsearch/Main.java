@@ -46,6 +46,7 @@ public class Main extends ActionBarActivity {
 	private static final String PER_PAGE = "per_page";
 	private static final String MEDIA = "media";
 
+	private static final String TAG_TAGWORD = "tagword";
 	private static final String TAG_STAT = "stat";
 	private static final String TAG_PHOTOS = "photos";
 	private static final String TAG_ID = "id";
@@ -64,10 +65,10 @@ public class Main extends ActionBarActivity {
 	ArrayList<FlickrImage> imageList = new ArrayList<FlickrImage>();
 	private FlickrImageAdapter imageAdapter;
 
-	String tagWord;
+	String tagWord = "";
 
 	private ProgressDialog pDialog;
-	
+
 	DatabaseHandler dbHandler;
 
 	@Override
@@ -76,7 +77,13 @@ public class Main extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 
 		dbHandler = new DatabaseHandler(this);
-		
+
+		Intent i = getIntent();
+		if(i.hasExtra(TAG_TAGWORD)) {
+			tagWord = i.getStringExtra(TAG_TAGWORD);
+		}
+		Log.d(TAG, tagWord);
+
 		text_input = (EditText) findViewById(R.id.text_input);
 		searchButton = (Button) findViewById(R.id.search_button);
 		searchButton.setOnClickListener(new OnClickListener() {
@@ -95,6 +102,11 @@ public class Main extends ActionBarActivity {
 
 		imageAdapter = new FlickrImageAdapter(Main.this, imageList);
 		imageListView.setAdapter(imageAdapter);
+		
+		if(!tagWord.equals("")) {
+			text_input.setText(tagWord);
+			new LookForTag().execute();
+		}
 	}
 
 	class LookForTag extends AsyncTask<String, String, String> {
