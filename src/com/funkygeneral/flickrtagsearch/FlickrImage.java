@@ -27,8 +27,10 @@ public class FlickrImage {
 	String URL;
 	// Bitmap for large photo
 	Bitmap photo;
+	
+	private FlickrImageAdapter imageAdapter;
 
-	// Setting the ImageContener and getting it's thumb and large URLs based on the other passed properties
+	// Setting the FlickrImage and getting it's URL based on the other passed properties
 	public FlickrImage(String id, String owner, String secret, String server, String farm) {
 		this.id = id;
 		this.owner = owner;
@@ -91,5 +93,74 @@ public class FlickrImage {
 	
 	public void setURL(String URL) {
 		this.URL = URL;
+	}
+	
+	public FlickrImageAdapter getAdapter() {
+		return imageAdapter;
+	}
+
+	public void setAdapter(FlickrImageAdapter imageAdapter) {
+		this.imageAdapter = imageAdapter;
+	}
+
+	public void loadImage(FlickrImageAdapter imageAdapter) {
+		// HOLD A REFERENCE TO THE ADAPTER
+		this.imageAdapter = imageAdapter;
+		if (URL != null && !URL.equals("")) {
+			new ImageLoadTask().execute(URL);
+		}
+	}
+
+	// ASYNC TASK TO AVOID CHOKING UP UI THREAD
+	private class ImageLoadTask extends AsyncTask<String, String, Bitmap> {
+
+		@Override
+		protected void onPreExecute() {
+			Log.i("ImageLoadTask", "Loading image...");
+		}
+
+		// PARAM[0] IS IMG URL
+		protected Bitmap doInBackground(String... param) {
+			Log.i("ImageLoadTask", "Attempting to load image URL: " + param[0]);
+			try {
+				Bitmap b = getBitmapFromURL(param[0]);
+				return b;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+
+		protected void onProgressUpdate(String... progress) {
+			// NO OP
+		}
+
+		protected void onPostExecute(Bitmap ret) {
+			if (ret != null) {
+				Log.i("ImageLoadTask", "Successfully loaded image");
+				photo = ret;
+				if (imageAdapter != null) {
+					// WHEN IMAGE IS LOADED NOTIFY THE ADAPTER
+					imageAdapter.notifyDataSetChanged();
+				}
+			} else {
+				Log.e("ImageLoadTask", "Failed to load image");
+			}
+		}
+	}
+
+	public static Bitmap getBitmapFromURL(String src) {
+	    try {
+	        URL url = new URL(src);
+	        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+	        connection.setDoInput(true);
+	        connection.connect();
+	        InputStream input = connection.getInputStream();
+	        Bitmap myBitmap = BitmapFactory.decodeStream(input);
+	        return myBitmap;
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
 	}
 }

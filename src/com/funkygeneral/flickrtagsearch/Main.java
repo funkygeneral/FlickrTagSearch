@@ -26,6 +26,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.os.Build;
 
 public class Main extends ActionBarActivity {
@@ -45,11 +46,24 @@ public class Main extends ActionBarActivity {
 	private static final String PER_PAGE = "per_page";
 	private static final String MEDIA = "media";
 
+	private static final String TAG_STAT = "stat";
+	private static final String TAG_PHOTOS = "photos";
+	private static final String TAG_ID = "id";
+	private static final String TAG_PHOTO = "photo";
+	private static final String TAG_FARM = "farm";
+	private static final String TAG_OWNER = "owner";
+	private static final String TAG_SECRET = "secret";
+	private static final String TAG_SERVER = "server";
+
 	String TAG = "Main Activity";
 
 	EditText text_input;
 	Button searchButton;
-	
+	ListView imageListView;
+
+	ArrayList<FlickrImage> imageList = new ArrayList<FlickrImage>();
+	private FlickrImageAdapter imageAdapter;
+
 	String tagWord;
 
 	private ProgressDialog pDialog;
@@ -71,6 +85,11 @@ public class Main extends ActionBarActivity {
 			}
 
 		});
+
+		imageListView = (ListView) findViewById(R.id.list);
+
+		imageAdapter = new FlickrImageAdapter(Main.this, imageList);
+		imageListView.setAdapter(imageAdapter);
 	}
 
 	class LookForTag extends AsyncTask<String, String, String> {
@@ -97,11 +116,50 @@ public class Main extends ActionBarActivity {
 			JSONObject json = jParser.makeHttpRequest(url_get_flickr_images, "GET", params);
 
 			Log.d(TAG, json.toString());
+
+			imageList.clear();
+
+			try {
+				String status = json.getString(TAG_STAT);
+
+				if (status.equals("ok")) {
+					JSONObject photos = json.getJSONObject(TAG_PHOTOS);
+					JSONArray photoArray = photos.getJSONArray(TAG_PHOTO);
+					for (int i = 0; i < photoArray.length(); i++) {
+						JSONObject photo = photoArray.getJSONObject(i);
+
+						String id = photo.getString(TAG_ID);
+						String owner = photo.getString(TAG_OWNER);
+						String secret = photo.getString(TAG_SECRET);
+						String server = photo.getString(TAG_SERVER);
+						String farm = photo.getString(TAG_FARM);
+
+						FlickrImage flickrImage = new FlickrImage(id, owner, secret, server, farm);
+						imageList.add(flickrImage);
+					}
+				} else {
+					Log.d("Zalora Test", "No products found");
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 			return null;
 		}
 
 		protected void onPostExecute(String file_url) {
 			pDialog.dismiss();
+			runOnUiThread(new Runnable() {
+				public void run() {
+
+					// CREATE BASE ADAPTER
+					//productAdapter = new ProductAdapter(Zalora.this, productList);
+					imageAdapter.notifyDataSetChanged();
+
+					for(FlickrImage product : imageList) {
+						product.loadImage(imageAdapter);
+					}
+				}
+			});
 		}
 	}
 
